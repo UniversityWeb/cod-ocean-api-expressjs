@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {sayHello} = require('~/controllers/HelloController')
+const {sayHello} = require('~/common/hello/HelloController')
 
 router.get('/', sayHello)
 

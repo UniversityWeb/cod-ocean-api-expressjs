@@ -1,4 +1,4 @@
-const db = require('~/configs/firebase')
+const db = require('~/common/configs/firebase')
 const User = require('../models/User')
 
 class UserService {

@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser')
 var logger = require('morgan')
 
 // Update paths to point to the `src/routes`
-var routes = require('~/routes/index')
+var routes = require('~/common/routes/index')
 
 var app = express()
 

@@ -34,7 +34,6 @@ Thumbs.db
 ehthumbs.db
 
 # NPM package lock file
-package-lock.json
 npm-debug.log*
 
 # Coverage reports
@@ -43,8 +42,6 @@ coverage/
 # Test files
 *.spec.js
 *.test.js
-
-/idea
 
 # Miscellaneous
 *.tgz

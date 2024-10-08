@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-const userRoutes = require('~/routes/userRoutes')
+const helloRoutes = require('~/common/hello/helloRoutes')
+const userRoutes = require('~/login/routes/userRoutes')
 
 router.use('/hello', helloRoutes)
 router.use('/users', userRoutes)
