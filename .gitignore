@@ -1,0 +1,54 @@
+# Node.js dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Environment variable files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Mac system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+
+# NPM package lock file
+package-lock.json
+npm-debug.log*
+
+# Coverage reports
+coverage/
+
+# Test files
+*.spec.js
+*.test.js
+
+/idea
+
+# Miscellaneous
+*.tgz
+*.zip
+*.rar
+
+serviceAccountKey.json
