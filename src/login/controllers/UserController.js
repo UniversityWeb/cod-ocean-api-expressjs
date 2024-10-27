@@ -22,7 +22,8 @@ const UserController = {
         urlImage,
         password,
         cumulativeScore,
-        isActive,
+        addedAt,
+        updatedAt,
         role,
       } = req.body;
 
@@ -34,15 +35,17 @@ const UserController = {
         urlImage,
         password,
         cumulativeScore,
-        isActive,
+        addedAt,
+        updatedAt,
+        true,
         role
       );
 
-      const userId = await UserService.createUser(user);
+      const userDTO = await UserService.register(user);
 
       const registerResponse = {
         message: MessageKeys.REGISTER_SUCCESSFULLY,
-        user: { id: userId, ...user } // Optionally return the user details
+        user: userDTO
       };
 
       return res.status(201).json(ResponseBuilder.success(registerResponse));
@@ -75,12 +78,49 @@ const UserController = {
 
   async login(req, res) {
     try {
-      const { phoneNumber, password } = req.body;
+      const { email, password } = req.body;
 
-      const token = await UserService.login(phoneNumber, password);
-      return res.status(200).json(ResponseBuilder.success({ token }));
+      const loginResponse = await UserService.login(email, password);
+      return res.status(200).json(ResponseBuilder.success({ loginResponse }));
     } catch (error) {
       return handleError(error, res);
+    }
+  },
+
+  async getCurUser(req, res) {
+    try {
+      // Assuming the JwtTokenFilter middleware has already set req.currentUser
+      const currentUser = req.user;
+      if (!currentUser) {
+        return res.status(401).json({ message: 'Unauthorized access' });
+      }
+
+      const user = await UserService.getUserByUid(currentUser.uid);
+      return res.status(200).json(ResponseBuilder.success({ user: user }));
+    } catch (error) {
+      return handleError(error, res);
+    }
+  },
+
+  async update(req, res) {
+    try {
+      const { uid } = req.params; // Extract user ID from URL parameters
+      const updatedUserData = req.body; // Get the updated fields from the request body
+
+      // Update the user using the UserService
+      const updatedUser = await UserService.update(uid, updatedUserData);
+
+      // Send the updated user data as a response
+      return res.status(200).json({
+        message: 'User updated successfully',
+        data: updatedUser
+      });
+
+    } catch (error) {
+      // Handle errors and send error response
+      return res.status(400).json({
+        message: `Error updating user: ${error.message}`
+      });
     }
   },
 };

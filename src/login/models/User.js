@@ -9,6 +9,8 @@ class User {
     urlImage,
     password,
     cumulativeScore,
+    addedAt,
+    updatedAt,
     isActive,
     role,
   ) {
@@ -19,18 +21,10 @@ class User {
     this.urlImage = urlImage
     this.password = password
     this.cumulativeScore = cumulativeScore
-    this.addedAt = new Date()
-    this.updatedAt = new Date()
+    this.addedAt = addedAt
+    this.updatedAt = updatedAt
     this.isActive = isActive
     this.role = role
-    this.notifications = []
-    this.comments = []
-    this.submissions = []
-    this.ownedProblems = []
-    this.contestEnrollments = []
-    this.contests = []
-    this.tokens = []
-    this.discusses = []
   }
 }
 
