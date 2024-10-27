@@ -8,6 +8,6 @@ router.post('/login', userController.login);
 router.get('/users', userController.getAllUsers);
 router.get('/users/get-users-by-email/:email', userController.getUserByEmail);
 router.get('/users/get-cur-user', JwtTokenFilter, userController.getCurUser);
-router.get('/users/update', userController.update);
+router.post('/users/update/:uid', userController.update);
 
 module.exports = router;

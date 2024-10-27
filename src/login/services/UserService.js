@@ -141,18 +141,24 @@ const UserService = {
       const existingUserData = userDoc.data();
 
       // Update Firebase Auth if needed
+      const updates = {};
+
       if (updatedUserData.email && updatedUserData.email !== existingUserData.email) {
-        await auth.updateUser(uid, { email: updatedUserData.email });
+        updates.email = updatedUserData.email;
       }
       if (updatedUserData.password) {
-        const hashedPassword = await hashPassword(updatedUserData.password);
-        updatedUserData.password = hashedPassword;
-        await auth.updateUser(uid, { password: updatedUserData.password });
+        updates.password = await hashPassword(updatedUserData.password);
+      }
+
+      // If there are any updates for Firebase Auth, apply them
+      if (Object.keys(updates).length > 0) {
+        await auth.updateUser(uid, updates);
       }
 
       // Create an object with only valid User fields for Firestore update
-      const userFields = Object.keys(new User());  // Get User class fields
+      const userFields = Object.keys(new User()); // Get User class fields
       const dataToUpdate = {};
+
       for (const key in updatedUserData) {
         if (userFields.includes(key)) {
           dataToUpdate[key] = updatedUserData[key];
