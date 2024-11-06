@@ -45,8 +45,6 @@ const OtpService = {
   }
 };
 
-// Utility functions
-
 // Generate a random 6-digit OTP string
 function generateOtpString() {
   return secureRandom(100000, 999999).toString();

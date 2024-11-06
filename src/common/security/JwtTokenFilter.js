@@ -1,20 +1,18 @@
-const { auth } = require('~/common/configs/firebase');
-const { ResponseBuilder } = require('~/auth/utils/utils');
+const { verifyToken } = require('~/auth/utils/jwtUtils');
 
 const JwtTokenFilter = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json(ResponseBuilder.error({ message: 'No token provided' }));
-    }
+  const token = req.header('Authorization')?.replace('Bearer ', ''); // Extract token from Authorization header
 
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await auth().verifyIdToken(token);
-    req.user = decodedToken;
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    req.user = decoded;
     next();
   } catch (error) {
-    console.error('Token verification failed:', error.message);
-    return res.status(401).json(ResponseBuilder.error({ message: 'Invalid token' }));
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
 

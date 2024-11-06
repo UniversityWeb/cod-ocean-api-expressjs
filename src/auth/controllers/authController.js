@@ -1,18 +1,9 @@
 const UserService = require('~/auth/services/UserService');
 const AccountService = require('~/auth/services/AccountService');
 const OTPService = require('~/auth/services/OTPService');
-const { ResponseBuilder, MessageKeys } = require('~/auth/utils/utils');
-
-const handleError = (error, res) => {
-  console.error(error);
-  const errorMessage = error.message || 'An error occurred';
-  const statusCode = error.code === '23505' ? 400 : 500;
-  const response = ResponseBuilder.error({ message: errorMessage });
-  return res.status(statusCode).json(response);
-};
+const { MessageKeys } = require('~/auth/utils/utils');
 
 const authController = {
-  // Sign-Up Controller
   async signUp(req, res) {
     try {
       const result = await UserService.createUser(req.body);
@@ -24,7 +15,6 @@ const authController = {
     }
   },
 
-  // Sign-In Controller
   async signIn(req, res) {
     try {
       const { email, password } = req.body;
@@ -46,7 +36,6 @@ const authController = {
     }
   },
 
-  // Sign-Out Controller
   async signOut(req, res) {
     const refreshToken = req.headers['authorization'];
     if (refreshToken) {
@@ -55,7 +44,6 @@ const authController = {
     res.sendStatus(200);
   },
 
-  // Refresh Token Controller
   async refreshToken(req, res) {
     try {
       const refreshToken = req.headers['authorization'];
@@ -69,7 +57,6 @@ const authController = {
     }
   },
 
-  // Request OTP Controller
   async requestOtp(req, res) {
     const { email } = req.query;
     const token = req.headers['authorization'];
@@ -85,7 +72,6 @@ const authController = {
     res.sendStatus(isSuccessful ? 201 : 400);
   },
 
-  // Verify OTP Controller
   async verifyOtp(req, res) {
     const { otp } = req.body;
     const token = req.headers['authorization'];
@@ -94,7 +80,6 @@ const authController = {
     res.sendStatus(isSuccessful ? 201 : 400);
   },
 
-  // Change Password Controller
   async changePassword(req, res) {
     const bearerToken = req.headers['authorization'];
     if (!bearerToken) {
@@ -110,7 +95,6 @@ const authController = {
     }
   },
 
-  // Forgot Password Controller
   async forgotPassword(req, res) {
     const { email, otp, newPassword } = req.body;
     try {
@@ -126,7 +110,6 @@ const authController = {
     }
   },
 
-  // Get Current User Controller
   async getCurrentUser(req, res) {
     try {
       const token = req.headers.authorization;
@@ -134,7 +117,7 @@ const authController = {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const user = await AccountService.getUserDetailsFromToken(token);
+      const user = await UserService.getUserDetailsFromToken(token);
       res.status(200).json(user);
     } catch (error) {
       res.status(500).json({ message: "Failed to retrieve user", error: error.message });
