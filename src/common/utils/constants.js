@@ -14,6 +14,7 @@ const COLLECTION_NAMES = {
   TEST_CASES: 'test_cases',
   SUBMISSIONS: 'submissions',
   TOKENS: 'tokens',
+  OTPS: 'otps',
 };
 
 module.exports = COLLECTION_NAMES;
