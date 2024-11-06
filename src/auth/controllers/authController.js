@@ -37,11 +37,20 @@ const authController = {
   },
 
   async signOut(req, res) {
-    const refreshToken = req.headers['authorization'];
-    if (refreshToken) {
-      await AccountService.deleteRefreshToken(refreshToken);
+    let refreshToken = req.headers['authorization'];
+    try {
+      if (refreshToken.startsWith('Bearer ')) {
+        refreshToken = refreshToken.substring(7); // Remove "Bearer " prefix
+      }
+
+      if (refreshToken) {
+        await AccountService.deleteRefreshToken(refreshToken);
+      }
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('Error signing out:', error.message);
+      res.status(500).send({ message: 'Failed to sign out. Please try again.' });
     }
-    res.sendStatus(200);
   },
 
   async refreshToken(req, res) {

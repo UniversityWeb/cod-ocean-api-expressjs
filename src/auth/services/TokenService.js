@@ -38,7 +38,29 @@ const TokenService = {
     const tokens = snapshot.docs
       .map(doc => convertFirebaseDocToToken(doc));
     return tokens;
-  }
+  },
+
+  deleteByToken: async function(tokenValue) {
+    try {
+      // Query the collection for documents where the token field matches the given token
+      const snapshot = await db.collection(TOKENS)
+        .where('token', '==', tokenValue).get();
+
+      if (snapshot.empty) {
+        throw new Error('No token found matching the given value');
+      }
+
+      snapshot.forEach(async (doc) => {
+        await doc.ref.delete();
+        console.log(`Token with value ${tokenValue} deleted`);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting token by token value:', error);
+      throw new Error(`Delete token failed: ${error.message}`);
+    }
+  },
 };
 
 module.exports = TokenService;

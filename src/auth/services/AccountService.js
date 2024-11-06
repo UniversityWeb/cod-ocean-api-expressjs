@@ -128,6 +128,10 @@ const AccountService = {
       throw new Error(`Failed to get token: ${error.message}`);
     }
   },
+
+  deleteRefreshToken: async function(refreshToken) {
+    await TokenService.deleteByToken(refreshToken);
+  }
 };
 
 module.exports = AccountService;
