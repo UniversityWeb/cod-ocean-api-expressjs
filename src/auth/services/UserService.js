@@ -1,4 +1,4 @@
-const { db, auth } = require('~/common/configs/firebase'); // Import Firestore and Firebase Auth from your config
+const { db } = require('~/common/configs/firebase'); // Import Firestore and Firebase Auth from your config
 const bcrypt = require('bcrypt');
 const User = require('~/auth/models/User');
 const { v4: uuidv4 } = require('uuid');
@@ -8,6 +8,8 @@ const UserService = {
   // Create a new user
   createUser: async function(userDTO) {
     try {
+      const hashedPass = await bcrypt.hash(userDTO.password, 10);
+
       // Step 1: Create a new instance of the User model
       const user = new User(
         null,
@@ -16,7 +18,7 @@ const UserService = {
         userDTO.dateOfBirth || '',
         userDTO.email || '',
         userDTO.urlImage || '',
-        userDTO.password,
+        hashedPass,
         userDTO.address || '',
         userDTO.city || '',
         userDTO.country || '',
@@ -31,50 +33,30 @@ const UserService = {
         User.ERole.USER
       );
 
-      // Step 2: Create the user in Firebase Authentication
-      const userRecord = await auth.createUser({
+      // Step 2: Store the user in Firestore
+      const userRef = db.collection(USERS).add({
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber,
+        dateOfBirth: user.dateOfBirth,
         email: user.email,
+        urlImage: user.urlImage,
         password: user.password,
-        displayName: user.fullName,
-        disabled: !user.isActive,
+        address: user.address,
+        city: user.city,
+        country: user.country,
+        school: user.school,
+        occupation: user.occupation,
+        favoriteProgrammingLanguage: user.favoriteProgrammingLanguage,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        VIPExpDate: user.VIPExpDate,
+        isActive: user.isActive,
+        isFirstLogin: user.isFirstLogin,
+        role: user.role,
       });
 
-      try {
-        // Step 3: Store the user in Firestore
-        const userRef = db.collection(USERS).doc(userRecord.uid);
-
-        await userRef.set({
-          fullName: user.fullName,
-          phoneNumber: user.phoneNumber,
-          dateOfBirth: user.dateOfBirth,
-          email: user.email,
-          urlImage: user.urlImage,
-          address: user.address,
-          city: user.city,
-          country: user.country,
-          school: user.school,
-          occupation: user.occupation,
-          favoriteProgrammingLanguage: user.favoriteProgrammingLanguage,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-          VIPExpDate: user.VIPExpDate,
-          isActive: user.isActive,
-          isFirstLogin: user.isFirstLogin,
-          role: user.role,
-        });
-
-        console.log('User created and stored successfully:', userRecord.uid);
-        return true;
-
-      } catch (firestoreError) {
-        console.error('Error storing user data in Firestore:', firestoreError.message);
-
-        // Optionally, you could delete the user from Firebase Authentication since Firestore failed
-        await auth.deleteUser(userRecord.uid);
-
-        throw new Error('Error storing user data in Firestore');
-      }
-
+      console.log('User created and stored successfully:', userRef?.id);
+      return true;
     } catch (error) {
       // Log the full error stack for better debugging
       console.error('Create user failed:', error.stack);
@@ -139,38 +121,16 @@ const UserService = {
     } catch (error) {
       throw new Error(`Change password failed: ${error.message}`);
     }
+  },
+
+  getUserDetailsFromToken: async function(token) {
+    const email = jwtTokenUtil.extractEmailFromBearerToken(token);
+    const user = await UserRepos.findByEmail(email);
+    if (!user) throw new UserNotFoundError(`User ${email} not found`);
+
+    return user;
   }
 };
-
-// Utility Functions for Firestore Operations
-
-// Save a user to Firestore
-async function saveUser(user) {
-  try {
-    await db.collection(USERS).doc(user.id).set({
-      fullName: user.fullName,
-      phoneNumber: user.phoneNumber,
-      dateOfBirth: user.dateOfBirth,
-      email: user.email,
-      urlImage: user.urlImage,
-      password: user.password, // Store the hashed password
-      address: user.address,
-      city: user.city,
-      country: user.country,
-      school: user.school,
-      occupation: user.occupation,
-      favoriteProgrammingLanguage: user.favoriteProgrammingLanguage,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      VIPExpDate: user.VIPExpDate,
-      isActive: user.isActive,
-      isFirstLogin: user.isFirstLogin,
-      role: user.role
-    });
-  } catch (error) {
-    throw new Error(`Failed to save user: ${error.message}`);
-  }
-}
 
 // Get a user by UID from Firestore
 async function getUserByUid(uid) {

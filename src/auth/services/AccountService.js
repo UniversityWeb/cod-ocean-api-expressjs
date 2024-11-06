@@ -7,17 +7,8 @@ const AccountService = {
   // Log in a user
   login: async function (email, password) {
     try {
-      // Get user authentication record from Firebase Authentication
-      const userRecord = await auth.getUserByEmail(email);
-
       // Fetch user data from Firestore
       const user = await getUserByEmail(email);
-
-      // Check if the password is valid
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
-      }
 
       // Check if it's the user's first login
       if (user.isFirstLogin) {
@@ -26,7 +17,7 @@ const AccountService = {
       }
 
       // Create a custom token for the user
-      const token = await auth.createCustomToken(userRecord.uid);
+      const token = await auth.createCustomToken(user.id);
       return token;
     } catch (error) {
       throw new Error(`Login failed: ${error.message}`);
@@ -87,6 +78,25 @@ const AccountService = {
     } catch (error) {
       throw new Error(`Refresh token failed: ${error.message}`);
     }
+  },
+
+  generateAndSaveRefreshToken: async function (accessToken) {
+    const email = jwtTokenUtil.extractEmail(accessToken);
+    const user = await UserRepos.findByEmail(email);
+    if (!user) throw new Error('User not found!');
+
+    const refreshToken = jwtTokenUtil.generateRefreshToken(accessToken);
+    let savedToken = await TokenRepos.findByUser(user);
+
+    if (!savedToken) {
+      savedToken = new Token({ token: refreshToken, user });
+      await TokenRepos.save(savedToken);
+    } else {
+      savedToken.token = refreshToken;
+      await TokenRepos.save(savedToken);
+    }
+
+    return refreshToken;
   }
 };
 
@@ -95,7 +105,8 @@ const AccountService = {
 // Fetch a user by email from Firestore
 async function getUserByEmail(email) {
   try {
-    const userQuery = await db.collection(USERS).where('email', '==', email).limit(1).get();
+    const userQuery = await db.collection(USERS)
+      .where('email', '==', email).limit(1).get();
     if (userQuery.empty) {
       throw new Error('User not found');
     }

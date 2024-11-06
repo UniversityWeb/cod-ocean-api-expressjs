@@ -139,7 +139,7 @@ const authController = {
     } catch (error) {
       res.status(500).json({ message: "Failed to retrieve user", error: error.message });
     }
-  }
+  },
 };
 
 module.exports = authController;
