@@ -95,6 +95,14 @@ const isValidToken = (token) => {
   }
 };
 
+const getTokenFromHeader = (req) => {
+  let token = req.headers['authorization'];
+  if (token.startsWith('Bearer ')) {
+    token = token.substring(7);
+  }
+  return token;
+}
+
 module.exports = {
   generateToken,
   generateRefreshToken,
@@ -106,4 +114,5 @@ module.exports = {
   extractEmailFromBearerToken,
   isValidToken,
   verifyToken,
+  getTokenFromHeader,
 };

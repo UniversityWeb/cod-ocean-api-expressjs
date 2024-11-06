@@ -1,3 +1,5 @@
+const { randomInt: secureRandom } = require('crypto');
+
 const ResponseBuilder = {
   success: (data) => ({
     success: true,
@@ -77,10 +79,22 @@ const MessageKeys = {
   CAPTURE_PAYPAL_FAILED: 'paypal.capture.failed',
 }
 
+const OTP_TYPES = {
+  FORGOT_PASSWORD: 'FORGOT_PASSWORD',
+  CHANGE_EMAIL: 'CHANGE_EMAIL',
+  ACTIVE_ACCOUNT: 'ACTIVE_ACCOUNT',
+}
+
+function generateOtpString() {
+  return secureRandom(100000, 999999).toString();
+}
+
 module.exports = {
   ResponseBuilder,
   MessageKeys,
   convertFirebaseDocToOtp,
   convertFirebaseDocToToken,
   convertFirebaseDocToUser,
+  OTP_TYPES,
+  generateOtpString,
 }

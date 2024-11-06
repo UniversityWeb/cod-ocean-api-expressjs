@@ -1,7 +1,8 @@
 const UserService = require('~/auth/services/UserService');
 const AccountService = require('~/auth/services/AccountService');
 const OTPService = require('~/auth/services/OTPService');
-const { MessageKeys } = require('~/auth/utils/utils');
+const { MessageKeys, OTP_TYPES} = require('~/auth/utils/utils');
+const {getTokenFromHeader} = require('~/auth/utils/jwtUtils');
 
 const authController = {
   async signUp(req, res) {
@@ -37,10 +38,7 @@ const authController = {
   },
 
   async signOut(req, res) {
-    let refreshToken = req.headers['authorization'];
-    if (refreshToken.startsWith('Bearer ')) {
-      refreshToken = refreshToken.substring(7); // Remove "Bearer " prefix
-    }
+    let refreshToken = getTokenFromHeader(req);
 
     try {
       if (refreshToken) {
@@ -54,10 +52,7 @@ const authController = {
   },
 
   async refreshToken(req, res) {
-    let refreshToken = req.headers['authorization'];
-    if (refreshToken.startsWith('Bearer ')) {
-      refreshToken = refreshToken.substring(7);
-    }
+    let refreshToken = getTokenFromHeader(req);
 
     try {
       const newAccessToken = await AccountService.refreshToken(refreshToken);
@@ -71,33 +66,40 @@ const authController = {
   },
 
   async requestOtp(req, res) {
-    const { email } = req.query;
-    const token = req.headers['authorization'];
-    let isSuccessful = false;
+    try {
+      const { email } = req.query;
+      const token = getTokenFromHeader(req);
+      let isSuccessful = false;
 
-    if (token) {
-      const type = email ? 'CHANGE_EMAIL' : 'ACTIVE_ACCOUNT';
-      isSuccessful = await OTPService.requestOTP(token, type);
-    } else if (email) {
-      isSuccessful = await OTPService.requestOTP(email, 'FORGOT_PASSWORD');
+      if (token) {
+        const type = email ? OTP_TYPES.CHANGE_EMAIL : OTP_TYPES.ACTIVE_ACCOUNT;
+        isSuccessful = await OTPService.requestOTP(token, type);
+      } else if (email) {
+        isSuccessful = await OTPService.requestOTP(email, OTP_TYPES.FORGOT_PASSWORD);
+      }
+
+      res.sendStatus(isSuccessful ? 201 : 400);
+    } catch (error) {
+      console.error("Error in requestOtp:", error);
+      res.sendStatus(500);  // Internal Server Error
     }
-
-    res.sendStatus(isSuccessful ? 201 : 400);
   },
 
   async verifyOtp(req, res) {
-    const { otp } = req.body;
-    const token = req.headers['authorization'];
-    const isSuccessful = token && await OTPService.verify(token, otp, 'ACTIVE_ACCOUNT');
+    try {
+      const { otp } = req.body;
+      const token = getTokenFromHeader(req);
+      const isSuccessful = token && await OTPService.verify(token, otp, OTP_TYPES.ACTIVE_ACCOUNT);
 
-    res.sendStatus(isSuccessful ? 201 : 400);
+      res.sendStatus(isSuccessful ? 201 : 400);
+    } catch (error) {
+      console.error("Error in verifyOtp:", error);
+      res.sendStatus(500);  // Internal Server Error
+    }
   },
 
   async changePassword(req, res) {
-    const bearerToken = req.headers['authorization'];
-    if (!bearerToken) {
-      return res.status(403).json({ message: "Permission deny!" });
-    }
+    const bearerToken = getTokenFromHeader(req);
 
     try {
       await AccountService.changePassword(bearerToken, req.body);
@@ -111,7 +113,7 @@ const authController = {
   async forgotPassword(req, res) {
     const { email, otp, newPassword } = req.body;
     try {
-      const isVerified = await OTPService.verify(email, otp, 'FORGOT_PASSWORD');
+      const isVerified = await OTPService.verify(email, otp, OTP_TYPES.FORGOT_PASSWORD);
       if (isVerified) {
         const message = await AccountService.resetPassword(email, newPassword);
         res.status(200).json({ message });
@@ -124,12 +126,12 @@ const authController = {
   },
 
   async getCurrentUser(req, res) {
-    try {
-      const token = req.headers.authorization;
-      if (!token) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    const token = getTokenFromHeader(req);
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
+    try {
       const user = await UserService.getUserDetailsFromToken(token);
       res.status(200).json(user);
     } catch (error) {
