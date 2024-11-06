@@ -38,11 +38,11 @@ const authController = {
 
   async signOut(req, res) {
     let refreshToken = req.headers['authorization'];
-    try {
-      if (refreshToken.startsWith('Bearer ')) {
-        refreshToken = refreshToken.substring(7); // Remove "Bearer " prefix
-      }
+    if (refreshToken.startsWith('Bearer ')) {
+      refreshToken = refreshToken.substring(7); // Remove "Bearer " prefix
+    }
 
+    try {
       if (refreshToken) {
         await AccountService.deleteRefreshToken(refreshToken);
       }
@@ -54,8 +54,12 @@ const authController = {
   },
 
   async refreshToken(req, res) {
+    let refreshToken = req.headers['authorization'];
+    if (refreshToken.startsWith('Bearer ')) {
+      refreshToken = refreshToken.substring(7);
+    }
+
     try {
-      const refreshToken = req.headers['authorization'];
       const newAccessToken = await AccountService.refreshToken(refreshToken);
       res.status(200).json({
         accessToken: newAccessToken,
